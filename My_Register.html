@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Register">
+<title>My Register</title>
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+:root {
+  --navy:#1a3a5c; --gold:#c9a227; --bg:#f2f2f7; --card:#fff;
+  --text:#1c1c1e; --sub:#6c6c70; --sep:#e5e5ea;
+  --red:#ff3b30; --green:#34c759; --orange:#ff9500; --blue:#007aff;
+  --st: env(safe-area-inset-top,0px); --sb: env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  padding-bottom:calc(88px + var(--sb));}
+
+/* ── HEADER ── */
+.hdr{background:var(--navy);padding:calc(var(--st) + 14px) 18px 0;position:sticky;top:0;z-index:100;}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.hdr h1{color:#fff;font-size:20px;font-weight:700;letter-spacing:-.3px;}
+.hdr-date{color:rgba(255,255,255,.6);font-size:13px;}
+.sync-btn{background:rgba(255,255,255,.15);border:none;color:#fff;
+  padding:6px 13px;border-radius:14px;font-size:12px;font-weight:600;cursor:pointer;}
+.sync-btn.has-new{background:var(--blue);}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:7px;padding:0 18px 12px;}
+.tab{flex:1;padding:8px 0;border-radius:18px;border:none;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;}
+.tab.on{background:var(--gold);color:#fff;}
+.tab:not(.on){background:rgba(255,255,255,.13);color:rgba(255,255,255,.8);}
+
+/* ── BALANCE CARD ── */
+.bal-wrap{padding:14px 16px 6px;}
+.bal-card{background:var(--navy);border-radius:18px;padding:20px;
+  color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.18);}
+.bal-lbl{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:3px;font-weight:500;}
+.bal-amt{font-size:38px;font-weight:700;letter-spacing:-1.5px;line-height:1.1;}
+.bal-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.bal-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:6px;}
+.pending-pill{background:var(--orange);color:#fff;font-size:11px;font-weight:700;
+  padding:3px 10px;border-radius:10px;margin-top:8px;display:inline-block;}
+
+/* ── SECTION HDR ── */
+.sec-hdr{padding:14px 16px 4px;font-size:12px;font-weight:600;
+  color:var(--sub);text-transform:uppercase;letter-spacing:.6px;}
+
+/* ── TRANSACTION LIST ── */
+.tx-list{padding:0 16px;}
+.tx{background:var(--card);border-radius:13px;padding:13px 15px;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.tx.pend{background:#fff8ed;border-left:3px solid var(--orange);}
+.tx.newt{background:#f0f7ff;border-left:3px solid var(--blue);}
+.tx-l{flex:1;min-width:0;}
+.tx-payee{font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tx-info{font-size:12px;color:var(--sub);margin-top:2px;}
+.tx-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}
+.tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;}
+.tag-biz{background:#e8f5e9;color:#2e7d32;}
+.tag-chk{background:#e3f2fd;color:#1565c0;}
+.tag-pend{background:#fff3e0;color:#e65100;}
+.tag-new{background:#e8f0fe;color:#1a73e8;}
+.tag-acct{background:#f3e5f5;color:#6a1b9a;}
+.tx-r{text-align:right;flex-shrink:0;padding-left:12px;}
+.tx-amt{font-size:17px;font-weight:700;}
+.tx-amt.dr{color:var(--red);}
+.tx-amt.cr{color:var(--green);}
+.tx-bal{font-size:12px;color:var(--sub);margin-top:2px;}
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:calc(22px + var(--sb));right:20px;
+  width:58px;height:58px;border-radius:29px;background:var(--gold);
+  color:#fff;border:none;font-size:30px;cursor:pointer;
+  box-shadow:0 4px 16px rgba(201,162,39,.55);
+  display:flex;align-items:center;justify-content:center;
+  z-index:200;transition:transform .13s;}
+.fab:active{transform:scale(.91);}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);
+  z-index:300;display:none;align-items:flex-end;}
+.overlay.open{display:flex;}
+.sheet{background:var(--card);border-radius:22px 22px 0 0;
+  padding:14px 20px calc(18px + var(--sb));width:100%;
+  max-height:88vh;overflow-y:auto;}
+.handle{width:38px;height:4px;background:#d1d1d6;border-radius:2px;margin:0 auto 16px;}
+.sheet h2{font-size:18px;font-weight:700;margin-bottom:18px;}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--sub);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{width:100%;padding:12px 14px;
+  border:1.5px solid var(--sep);border-radius:11px;font-size:16px;
+  font-family:inherit;background:#fff;color:var(--text);-webkit-appearance:none;}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--navy);}
+.type-row{display:flex;gap:8px;flex-wrap:wrap;}
+.type-btn{flex:1;min-width:calc(50% - 4px);padding:11px 6px;border:1.5px solid var(--sep);border-radius:11px;
+  font-size:14px;font-weight:600;cursor:pointer;background:#fff;transition:all .15s;text-align:center;}
+.type-btn.pmt{background:#fff1f0;border-color:var(--red);color:var(--red);}
+.type-btn.dep{background:#f0faf0;border-color:var(--green);color:var(--green);}
+.type-btn.zel{background:#e8f4ff;border-color:#007aff;color:#007aff;}
+.type-btn.ven{background:#f3e8ff;border-color:#5f27cd;color:#5f27cd;}
+.act-row{display:flex;gap:10px;margin-top:6px;}
+
+/* ── PHOTO ── */
+.photo-btn{width:100%;padding:13px;border:1.5px dashed var(--sep);border-radius:11px;
+  background:#f9f9f9;font-size:15px;color:var(--sub);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s;}
+.photo-btn.has-photo{border-color:var(--green);background:#f0faf0;color:var(--green);}
+.photo-preview{width:100%;border-radius:11px;margin-top:8px;display:none;
+  max-height:180px;object-fit:cover;}
+.photo-preview.show{display:block;}
+.btn-c{flex:1;padding:14px;border:1.5px solid var(--sep);border-radius:13px;
+  background:#fff;font-size:16px;font-weight:600;color:var(--sub);cursor:pointer;}
+.btn-s{flex:2;padding:14px;border:none;border-radius:13px;
+  background:var(--navy);color:#fff;font-size:16px;font-weight:600;cursor:pointer;}
+
+/* ── EXPORT SHEET ── */
+.export-box{background:#f2f2f7;border-radius:11px;padding:13px;
+  font-size:12px;font-family:Menlo,monospace;white-space:pre-wrap;
+  word-break:break-all;max-height:220px;overflow-y:auto;margin:12px 0;
+  color:var(--text);}
+.copy-btn{width:100%;padding:13px;background:var(--blue);color:#fff;
+  border:none;border-radius:13px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;}
+.empty{text-align:center;padding:60px 20px;color:var(--sub);}
+.empty .icon{font-size:48px;margin-bottom:12px;}
+.empty p{font-size:15px;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <h1>My Register</h1>
+      <div class="hdr-date" id="hdrDate"></div>
+    </div>
+    <button class="sync-btn" id="syncBtn" onclick="openExport()">Sync ↑</button>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="setTab('all',this)">All</button>
+    <button class="tab" onclick="setTab('bofa',this)">BofA 6295</button>
+    <button class="tab" onclick="setTab('pnc',this)">PNC 5628</button>
+  </div>
+</div>
+
+<div class="bal-wrap"><div class="bal-card" id="balCard"></div></div>
+<div class="sec-hdr" id="txHdr">Transactions</div>
+<div class="tx-list" id="txList"></div>
+
+<button class="fab" onclick="openAdd()">+</button>
+
+<!-- ADD MODAL -->
+<div class="overlay" id="addOverlay">
+  <div class="sheet">
+    <div class="handle"></div>
+    <h2>New Transaction</h2>
+    <div class="fg">
+      <label>Account</label>
+      <select id="fAcct">
+        <option value="bofa">Bank of America (6295)</option>
+        <option value="pnc">PNC Performance (5628)</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Date</label>
+      <input type="date" id="fDate">
+    </div>
+    <div class="fg">
+      <label>Type</label>
+      <div class="type-row">
+        <button class="type-btn pmt" id="btnPmt" onclick="setType('pmt')">Payment −</button>
+        <button class="type-btn" id="btnDep" onclick="setType('dep')">Deposit +</button>
+        <button class="type-btn" id="btnZel" onclick="setType('zel')">Zelle −</button>
+        <button class="type-btn" id="btnVen" onclick="setType('ven')">Venmo −</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Payee / Description</label>
+      <input type="text" id="fPayee" placeholder="Who / what">
+    </div>
+    <div class="fg">
+      <label>Amount ($)</label>
+      <input type="number" id="fAmt" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+    </div>
+    <div class="fg">
+      <label>Check # (optional)</label>
+      <input type="text" id="fChk" placeholder="">
+    </div>
+    <div class="fg">
+      <label>Notes (optional)</label>
+      <input type="text" id="fNote" placeholder="">
+    </div>
+    <div class="fg" style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="fBiz" style="width:20px;height:20px;flex-shrink:0;">
+      <label for="fBiz" style="text-transform:none;font-size:15px;font-weight:500;color:var(--text);letter-spacing:0;">Business expense</label>
+    </div>
+    <div class="fg">
+      <label>Receipt / Photo (optional)</label>
+      <input type="file" id="fPhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="photoSelected(this)">
+      <button class="photo-btn" id="photoBtn" onclick="document.getElementById('fPhotoInput').click()">
+        <span style="font-size:22px;">📷</span> Take Photo or Choose Image
+      </button>
+      <img id="photoPreview" class="photo-preview" alt="Receipt preview">
+    </div>
+    <div class="act-row">
+      <button class="btn-c" onclick="closeAdd()">Cancel</button>
+      <button class="btn-s" onclick="saveNew()">Add Transaction</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="overlay" id="exportOverlay">
+  <div class="sheet">
+    <div class="handle"></div>
+    <h2>Sync with Claude</h2>
+    <p style="font-size:14px;color:var(--sub);line-height:1.5;">
+      Copy this text and paste it to Claude in your Bookkeeping project. Claude will add these to the master register and send back an updated app.</p>
+    <div class="export-box" id="exportBox"></div>
+    <button class="copy-btn" onclick="copyExport()">Copy to Clipboard</button>
+    <div style="margin-top:12px;">
+      <button class="btn-c" style="width:100%;" onclick="closeExport()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── BASE DATA ─────────────────────────────────────────────────────────────────
+const ACCOUNTS = [
+  {
+    id:'bofa', name:'Bank of America', short:'BofA', ending:'6295',
+    openBal:20910.99,
+    txns:[
+      {d:'2026-05-27',payee:'Shane McCord',pmt:150.00,dep:0,chk:'',cl:true,note:'Handyman – painted front steps',biz:false},
+      {d:'2026-05-28',payee:'Duke Energy',pmt:113.57,dep:0,chk:'',cl:true,note:'Bill Pay',biz:false},
+      {d:'2026-05-29',payee:'Amazon.com',pmt:0,dep:3.40,chk:'',cl:true,note:'Payments refund',biz:false},
+      {d:'2026-05-29',payee:'Becka – Massage',pmt:150.00,dep:0,chk:'',cl:true,note:'Weekly massage (Venmo 5/28)',biz:false},
+      {d:'2026-06-01',payee:'VIA Benefits',pmt:0,dep:3.60,chk:'',cl:true,note:'Claim payment',biz:false},
+      {d:'2026-06-02',payee:'Mobile Deposit',pmt:0,dep:15.70,chk:'',cl:true,note:'',biz:false},
+      {d:'2026-06-02',payee:'Chase Credit Cards',pmt:1302.17,dep:0,chk:'',cl:true,note:'Bill Payment',biz:false},
+      {d:'2026-06-02',payee:'Epworth UMC',pmt:700.00,dep:0,chk:'',cl:true,note:'Monthly charitable donation',biz:false},
+      {d:'2026-06-03',payee:'Check 3654',pmt:175.00,dep:0,chk:'3654',cl:true,note:'',biz:false},
+      {d:'2026-06-05',payee:'Check 3652',pmt:1875.00,dep:0,chk:'3652',cl:true,note:'',biz:false},
+      {d:'2026-06-05',payee:'Claire Stone',pmt:781.00,dep:0,chk:'',cl:true,note:'Medicare premium reimbursement (Venmo)',biz:false},
+      {d:'2026-06-05',payee:'Becka – Massage',pmt:150.00,dep:0,chk:'',cl:true,note:'Weekly massage (Venmo 6/4)',biz:false},
+      {d:'2026-06-10',payee:'Social Security',pmt:0,dep:2971.40,chk:'',cl:true,note:'SSA direct deposit',biz:false},
+      {d:'2026-06-10',payee:'Facebook Ads',pmt:0,dep:6.88,chk:'',cl:true,note:'Payout / credit',biz:true},
+      {d:'2026-06-11',payee:'Mobile Deposit',pmt:0,dep:125.00,chk:'',cl:true,note:'',biz:false},
+      {d:'2026-06-11',payee:'Dominion Energy',pmt:61.66,dep:0,chk:'',cl:true,note:'Auto-pay',biz:false},
+      {d:'2026-06-11',payee:'Obler – Lawn Care',pmt:60.00,dep:0,chk:'',cl:true,note:'Bi-weekly (Venmo)',biz:false},
+      {d:'2026-06-11',payee:'Check 3653',pmt:700.00,dep:0,chk:'3653',cl:true,note:'',biz:false},
+      {d:'2026-06-12',payee:'Diners Club',pmt:1310.56,dep:0,chk:'',cl:true,note:'Bill Payment',biz:false},
+      {d:'2026-06-12',payee:'American Express',pmt:672.78,dep:0,chk:'',cl:true,note:'Bill Payment',biz:false},
+      {d:'2026-06-12',payee:'Becka – Massage',pmt:150.00,dep:0,chk:'',cl:true,note:'Weekly massage (Venmo 6/11)',biz:false},
+      {d:'2026-06-15',payee:'VIA Benefits',pmt:0,dep:3.60,chk:'',cl:true,note:'Claim payment',biz:false},
+      {d:'2026-06-17',payee:'WNC Public Radio',pmt:10.00,dep:0,chk:'',cl:true,note:'Monthly donation',biz:false},
+      {d:'2026-06-18',payee:'Check 3655',pmt:175.00,dep:0,chk:'3655',cl:true,note:'',biz:false},
+      {d:'2026-06-22',payee:'Becka – Massage',pmt:150.00,dep:0,chk:'',cl:true,note:'Weekly massage (Venmo 6/18)',biz:false},
+      {d:'2026-06-23',payee:'VIA Benefits',pmt:0,dep:280.70,chk:'',cl:true,note:'Claim payment',biz:false},
+      {d:'2026-06-24',payee:'Duke Energy',pmt:121.15,dep:0,chk:'',cl:true,note:'Bill Pay',biz:false},
+      {d:'2026-06-25',payee:'Becka – Massage',pmt:150.00,dep:0,chk:'',cl:true,note:'Weekly massage (Venmo 6/24)',biz:false},
+      {d:'2026-06-25',payee:'Interest Earned',pmt:0,dep:0.14,chk:'',cl:true,note:'',biz:false},
+      {d:'2026-06-26',payee:'Ourisman Travel',pmt:0,dep:5750.00,chk:'',cl:true,note:'Commission payment',biz:false},
+      {d:'2026-06-26',payee:'Check 3656',pmt:493.16,dep:0,chk:'3656',cl:true,note:'',biz:false},
+      {d:'2026-06-26',payee:'Obler – Lawn Care',pmt:60.00,dep:0,chk:'',cl:true,note:'Bi-weekly (Venmo)',biz:false},
+      {d:'2026-06-29',payee:'City of Asheville – Water',pmt:188.29,dep:0,chk:'',cl:false,note:'Auto-withdrawal',biz:false},
+      {d:'2026-06-30',payee:'May Gardens',pmt:903.00,dep:0,chk:'',cl:false,note:'Gardening service – processing',biz:false},
+      {d:'2026-07-02',payee:'Chase Credit Cards',pmt:1103.32,dep:0,chk:'',cl:false,note:'Scheduled bill pay',biz:false},
+      {d:'2026-07-09',payee:'BofA Visa 6615 – CC Payment',pmt:1927.74,dep:0,chk:'',cl:false,note:'Statement balance. Conf k8f9z4v9c',biz:false},
+      {d:'2026-07-13',payee:'Enbridge Gas',pmt:39.77,dep:0,chk:'',cl:false,note:'Auto-withdrawal',biz:false},
+    ]
+  },
+  {
+    id:'pnc', name:'PNC Performance Checking', short:'PNC', ending:'5628',
+    openBal:24868.31,
+    txns:[
+      {d:'2026-05-29',payee:'Bank of America – Transfer',pmt:9059.37,dep:0,chk:'',cl:true,note:'Online payment to BofA',biz:false},
+      {d:'2026-05-29',payee:'Results in Sight – PR',pmt:1250.00,dep:0,chk:'',cl:true,note:'Book PR expense',biz:true},
+      {d:'2026-06-01',payee:'Ourisman Motors',pmt:0,dep:5000.00,chk:'',cl:true,note:'Family corporate ACH',biz:false},
+      {d:'2026-06-09',payee:'HS/HNHIC – Health Insurance',pmt:159.31,dep:0,chk:'',cl:true,note:'Premium – acct 4760',biz:false},
+      {d:'2026-06-09',payee:'HS/HNHIC – Health Insurance',pmt:121.39,dep:0,chk:'',cl:true,note:'Premium – acct 4761',biz:false},
+      {d:'2026-06-09',payee:'Interest Earned',pmt:0,dep:0.17,chk:'',cl:true,note:'',biz:false},
+      {d:'2026-06-10',payee:'Givens Choice – LTC Medical',pmt:544.00,dep:0,chk:'',cl:true,note:'Prepaid long-term medical care – acct 0120',biz:false},
+      {d:'2026-06-10',payee:'Givens Choice – LTC Medical',pmt:566.00,dep:0,chk:'',cl:true,note:'Prepaid long-term medical care – acct 0121',biz:false},
+      {d:'2026-06-11',payee:'Ourisman Motors',pmt:0,dep:200000.00,chk:'',cl:true,note:'Cash disbursement – corporate ACH',biz:false},
+      {d:'2026-06-12',payee:'IRS – Tax Payment',pmt:200000.00,dep:0,chk:'',cl:true,note:'USATAXPYMT ACH',biz:false},
+      {d:'2026-06-22',payee:'Results in Sight – PR',pmt:1250.00,dep:0,chk:'',cl:true,note:'Book PR expense',biz:true},
+      {d:'2026-06-22',payee:'Results in Sight – PR',pmt:250.00,dep:0,chk:'',cl:true,note:'Book PR expense',biz:true},
+    ]
+  }
+];
+
+// ── STORAGE ───────────────────────────────────────────────────────────────────
+const STORE_KEY = 'davidRegister_v2';
+function loadNew() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); } catch(e){return [];}
+}
+function saveToStorage(arr) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); } catch(e){}
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let tab = 'all';
+let txType = 'pmt';
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function fmt$(n){
+  if(n===null||n===undefined||n==='')return '';
+  const neg=n<0;
+  const s='$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return neg?'('+s+')':s;
+}
+function fmtDate(iso){
+  const [y,m,d]=iso.split('-');
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[+m-1]+' '+d.replace(/^0/,'');
+}
+function today(){
+  const n=new Date();
+  return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+}
+function longDate(iso){
+  const [y,m,d]=iso.split('-');
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return months[+m-1]+' '+d.replace(/^0/,'')+', '+y;
+}
+
+// ── BALANCE CALC ─────────────────────────────────────────────────────────────
+function buildWithBalances(acct, newTxns){
+  const extras = newTxns.filter(t=>t.acct===acct.id).map(t=>({...t, cl:false, isNew:true}));
+  const all = [...acct.txns, ...extras].sort((a,b)=>a.d.localeCompare(b.d));
+  let bal = acct.openBal;
+  return all.map(t=>{
+    bal = Math.round((bal - (t.pmt||0) + (t.dep||0))*100)/100;
+    return {...t, runBal:bal};
+  });
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){
+  const newTxns = loadNew();
+  const syncBtn = document.getElementById('syncBtn');
+  if(newTxns.length>0){syncBtn.classList.add('has-new');syncBtn.textContent='Sync ↑ '+newTxns.length;}
+  else{syncBtn.classList.remove('has-new');syncBtn.textContent='Sync ↑';}
+
+  // Which accounts to show
+  const accts = tab==='all' ? ACCOUNTS : ACCOUNTS.filter(a=>a.id===tab);
+
+  // Balance card
+  let balHtml='';
+  if(accts.length===1){
+    const a=accts[0];
+    const rows=buildWithBalances(a,newTxns);
+    const posted=rows.filter(t=>t.cl);
+    const cur=posted.length?posted[posted.length-1].runBal:a.openBal;
+    const proj=rows.length?rows[rows.length-1].runBal:a.openBal;
+    const pend=rows.filter(t=>!t.cl);
+    balHtml=`
+      <div class="bal-row">
+        <div>
+          <div class="bal-lbl">${a.name} ···${a.ending}</div>
+          <div class="bal-amt">${fmt$(cur)}</div>
+          <div class="bal-sub">Posted balance</div>
+          ${pend.length?`<div class="pending-pill">${pend.length} pending — projected ${fmt$(proj)}</div>`:''}
+        </div>
+      </div>`;
+  } else {
+    let totalCur=0, totalProj=0, pendCount=0;
+    ACCOUNTS.forEach(a=>{
+      const rows=buildWithBalances(a,newTxns);
+      const posted=rows.filter(t=>t.cl);
+      const cur=posted.length?posted[posted.length-1].runBal:a.openBal;
+      const proj=rows.length?rows[rows.length-1].runBal:a.openBal;
+      totalCur+=cur; totalProj+=proj;
+      pendCount+=rows.filter(t=>!t.cl).length;
+    });
+    balHtml=`
+      <div class="bal-row">
+        <div>
+          <div class="bal-lbl">Combined balance</div>
+          <div class="bal-amt">${fmt$(totalCur)}</div>
+          <div class="bal-sub">Both accounts posted</div>
+          ${pendCount?`<div class="pending-pill">${pendCount} pending — projected ${fmt$(totalProj)}</div>`:''}
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15);">
+        ${ACCOUNTS.map(a=>{
+          const rows=buildWithBalances(a,newTxns);
+          const posted=rows.filter(t=>t.cl);
+          const cur=posted.length?posted[posted.length-1].runBal:a.openBal;
+          return `<div><div class="bal-lbl">${a.short} ···${a.ending}</div><div style="font-size:20px;font-weight:700;color:#fff;">${fmt$(cur)}</div></div>`;
+        }).join('')}
+      </div>`;
+  }
+  document.getElementById('balCard').innerHTML=balHtml;
+
+  // Transactions (most recent first)
+  let allRows=[];
+  accts.forEach(a=>{
+    buildWithBalances(a,newTxns).forEach(t=>allRows.push({...t,acctId:a.id,acctShort:a.short,acctEnding:a.ending}));
+  });
+  allRows.sort((a,b)=>b.d.localeCompare(a.d)||(b.isNew?1:-1));
+
+  document.getElementById('txHdr').textContent = allRows.length+' Transactions';
+
+  if(!allRows.length){
+    document.getElementById('txList').innerHTML='<div class="empty"><div class="icon">🏦</div><p>No transactions yet</p></div>';
+    return;
+  }
+
+  let html='';
+  let lastMonth='';
+  allRows.forEach(t=>{
+    const month=t.d.substring(0,7);
+    if(month!==lastMonth){
+      const [y,m]=month.split('-');
+      const mNames=['','January','February','March','April','May','June','July','August','September','October','November','December'];
+      html+=`<div class="sec-hdr" style="padding-top:6px;">${mNames[+m]} ${y}</div>`;
+      lastMonth=month;
+    }
+    const cls=t.isNew?'tx newt':(!t.cl?'tx pend':'tx');
+    const isDebit=t.pmt>0;
+    const amt=isDebit?t.pmt:t.dep;
+    const tags=[];
+    if(!t.cl&&!t.isNew) tags.push('<span class="tag tag-pend">Pending</span>');
+    if(t.isNew) tags.push('<span class="tag tag-new">New – unsynced</span>');
+    if(t.chk) tags.push(`<span class="tag tag-chk">Check ${t.chk}</span>`);
+    if(t.method==='zel') tags.push('<span class="tag" style="background:#e8f4ff;color:#007aff;">Zelle</span>');
+    if(t.method==='ven') tags.push('<span class="tag" style="background:#f3e8ff;color:#5f27cd;">Venmo</span>');
+    if(t.photo) tags.push('<span class="tag" style="background:#e8f5e9;color:#2e7d32;">📷 Receipt</span>');
+    if(t.biz) tags.push('<span class="tag tag-biz">Business</span>');
+    if(tab==='all') tags.push(`<span class="tag tag-acct">${t.acctShort}</span>`);
+    html+=`<div class="${cls}">
+      <div class="tx-l">
+        <div class="tx-payee">${t.payee}</div>
+        <div class="tx-info">${fmtDate(t.d)}${t.note?' · '+t.note:''}</div>
+        ${tags.length?`<div class="tx-tags">${tags.join('')}</div>`:''}
+      </div>
+      <div class="tx-r">
+        <div class="tx-amt ${isDebit?'dr':'cr'}">${isDebit?'−':'+'} ${fmt$(amt)}</div>
+        <div class="tx-bal">${fmt$(t.runBal)}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('txList').innerHTML=html;
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function setTab(t,el){
+  tab=t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
+
+// ── ADD TRANSACTION ───────────────────────────────────────────────────────────
+function openAdd(){
+  document.getElementById('fDate').value=today();
+  document.getElementById('fPayee').value='';
+  document.getElementById('fAmt').value='';
+  document.getElementById('fChk').value='';
+  document.getElementById('fNote').value='';
+  document.getElementById('fBiz').checked=false;
+  // Reset photo
+  photoData=null;
+  document.getElementById('fPhotoInput').value='';
+  document.getElementById('photoPreview').src='';
+  document.getElementById('photoPreview').classList.remove('show');
+  document.getElementById('photoBtn').classList.remove('has-photo');
+  document.getElementById('photoBtn').innerHTML='<span style="font-size:22px;">📷</span> Take Photo or Choose Image';
+  if(tab!=='all') document.getElementById('fAcct').value=tab;
+  setType('pmt');
+  document.getElementById('addOverlay').classList.add('open');
+}
+function closeAdd(){ document.getElementById('addOverlay').classList.remove('open'); }
+function setType(t){
+  txType=t;
+  document.getElementById('btnPmt').className='type-btn'+(t==='pmt'?' pmt':'');
+  document.getElementById('btnDep').className='type-btn'+(t==='dep'?' dep':'');
+  document.getElementById('btnZel').className='type-btn'+(t==='zel'?' zel':'');
+  document.getElementById('btnVen').className='type-btn'+(t==='ven'?' ven':'');
+}
+
+// ── PHOTO ─────────────────────────────────────────────────────────────────────
+let photoData = null;
+function photoSelected(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    photoData = e.target.result;
+    const preview = document.getElementById('photoPreview');
+    preview.src = photoData;
+    preview.classList.add('show');
+    const btn = document.getElementById('photoBtn');
+    btn.classList.add('has-photo');
+    btn.innerHTML = '<span style="font-size:22px;">✅</span> Photo attached — tap to replace';
+  };
+  reader.readAsDataURL(file);
+}
+function saveNew(){
+  const payee=document.getElementById('fPayee').value.trim();
+  const amt=parseFloat(document.getElementById('fAmt').value);
+  if(!payee){alert('Please enter a payee.');return;}
+  if(!amt||amt<=0){alert('Please enter a valid amount.');return;}
+  const isDebit = (txType !== 'dep');
+  const entry={
+    id: Date.now(),
+    acct: document.getElementById('fAcct').value,
+    d: document.getElementById('fDate').value,
+    payee,
+    pmt: isDebit ? amt : 0,
+    dep: isDebit ? 0 : amt,
+    method: txType,  // 'pmt','dep','zel','ven'
+    chk: document.getElementById('fChk').value.trim(),
+    note: document.getElementById('fNote').value.trim(),
+    biz: document.getElementById('fBiz').checked,
+    photo: photoData || null,
+    addedOn: new Date().toISOString()
+  };
+  const arr=loadNew();
+  arr.push(entry);
+  saveToStorage(arr);
+  closeAdd();
+  render();
+}
+
+// ── EXPORT / SYNC ─────────────────────────────────────────────────────────────
+function openExport(){
+  const arr=loadNew();
+  let text='';
+  if(!arr.length){
+    text='No new transactions to sync.';
+  } else {
+    text='NEW TRANSACTIONS TO ADD TO REGISTER:\n\n';
+    arr.forEach((t,i)=>{
+      const acct=ACCOUNTS.find(a=>a.id===t.acct);
+      text+=`${i+1}. ${acct?acct.name:'?'} (${t.d})\n`;
+      text+=`   Payee: ${t.payee}\n`;
+      const methodLabel={pmt:'Payment',dep:'Deposit',zel:'Zelle',ven:'Venmo'};
+      if(t.pmt>0) text+=`   ${methodLabel[t.method]||'Payment'}: $${t.pmt.toFixed(2)}\n`;
+      if(t.dep>0) text+=`   Deposit: $${t.dep.toFixed(2)}\n`;
+      if(t.chk) text+=`   Check #: ${t.chk}\n`;
+      if(t.photo) text+=`   [Receipt photo attached]\n`;
+      if(t.note) text+=`   Note: ${t.note}\n`;
+      if(t.biz) text+=`   [BUSINESS EXPENSE]\n`;
+      text+='\n';
+    });
+  }
+  document.getElementById('exportBox').textContent=text;
+  document.getElementById('exportOverlay').classList.add('open');
+}
+function closeExport(){ document.getElementById('exportOverlay').classList.remove('open'); }
+function copyExport(){
+  const txt=document.getElementById('exportBox').textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt).then(()=>{
+      const b=document.querySelector('.copy-btn');
+      b.textContent='Copied ✓'; b.style.background='#34c759';
+      setTimeout(()=>{b.textContent='Copy to Clipboard';b.style.background='';},2000);
+    });
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+document.getElementById('hdrDate').textContent = longDate(today());
+render();
+</script>
+</body>
+</html>
